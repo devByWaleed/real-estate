@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema({
 
 // .model gets collection name & schema
 const UserModel = mongoose.model("user", UserSchema,)
-// const UserModel = mongoose.models.user || mongoose.model("user", UserSchema, "accounts")
+// const UserModel = mongoose.models.user || mongoose.model("user", UserSchema, "listings")
 
 
 // Exporting the model
