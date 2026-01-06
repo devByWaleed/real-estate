@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    avatar: { type: String, default: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2nhWBc7DS2jvf_JW8hoy1U_WR9b_If5ZzCw&s" },
 }, { timestamps: true });
 
 

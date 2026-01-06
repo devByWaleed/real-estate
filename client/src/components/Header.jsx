@@ -1,7 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 // import { FaSearch } from 'react-icons/fa';
 
 const Header = () => {
+
+    const { currentUser } = useSelector(state => state.user)
+
     return (
         <header className='bg-slate-200 shadow-md'>
             <div className='flex justify-between items-center max-w-6xl mx-auto p-3'>
@@ -19,8 +23,8 @@ const Header = () => {
                         type='text'
                         placeholder='Search...'
                         className='bg-transparent focus:outline-none w-24 sm:w-64'
-                        // value={searchTerm}
-                        // onChange={(e) => setSearchTerm(e.target.value)}
+                    // value={searchTerm}
+                    // onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     <button>
                         {/* <FaSearch className='text-slate-600' /> */}
@@ -37,16 +41,18 @@ const Header = () => {
                             About
                         </li>
                     </Link>
-                    <Link to='/login'>
-                        {/* {currentUser ? ( */}
-                            <img
-                                className='rounded-full h-7 w-7 object-cover'
-                                // src={currentUser.avatar}
-                                alt='profile'
-                            />
-                        {/* ) : ( */}
-                            <li className=' text-slate-700 hover:underline'> Sign in</li>
-                        {/* )} */}
+
+
+                    <Link to='/profile'>
+                        {currentUser ? (
+                        <img
+                            className='rounded-full h-7 w-7 object-cover'
+                            src={currentUser.avatar}
+                            alt='Profile'
+                        />
+                        ) : ( 
+                        <li className=' text-slate-700 hover:underline'> Sign in</li>
+                         )}
                     </Link>
                 </ul>
             </div>
