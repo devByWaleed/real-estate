@@ -1,33 +1,40 @@
-import { useSelector } from 'react-redux';
-import { useRef, useState, useEffect } from 'react';
-import {
-    getDownloadURL,
-    getStorage,
-    ref,
-    uploadBytesResumable,
-} from 'firebase/storage';
-import { app } from '../firebase';
+import { useSelector, useDispatch } from 'react-redux';
+import { useRef, useState } from 'react';
+import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUserStart, deleteUserSuccess, deleteUserFailure, signOutUserStart, signOutUserSuccess, signOutUserFailure } from '../redux/user/userSlice.js';
 import { supabase } from '../supabaseClient';
 
 
 export default function Profile() {
-    // const [fileUploadError, setFileUploadError] = useState(false);
-    // const [fileURL, setFileURL] = useState("")
-
 
     const fileRef = useRef(null);
-    const { currentUser } = useSelector((state) => state.user);
+    const dispatch = useDispatch()
+
+    const { currentUser, loading, error } = useSelector((state) => state.user);
+
     const [filePerc, setFilePerc] = useState(0);
-
-
-    const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState({});
+    const [updateSuccess, setUpdateSuccess] = useState(false);
 
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
-        setFile(selectedFile);
+
+        if (!selectedFile || uploading) return;
+
+        // ✅ Validate image
+        if (!selectedFile.type.startsWith('image/')) {
+            alert('Only image files are allowed');
+            return;
+        }
+
+        // ✅ 2MB limit
+        if (selectedFile.size > 2 * 1024 * 1024) {
+            alert('Image must be under 2MB');
+            return;
+        }
+
+
         // Automatically trigger upload when file is picked
         if (selectedFile) {
             handleUpload(selectedFile);
@@ -42,60 +49,123 @@ export default function Profile() {
 
             const fileExt = selectedFile.name.split(".").pop()
             const fileName = `${currentUser._id}-${Math.random()}.${fileExt}`
-            const filePath = `${fileName}`
+            // const filePath = `${fileName}`
 
 
             // 1. UPLOAD TO SUPABASE
-            // Change "property-images" to your actual bucket name!
             let { error: uploadError } = await supabase.storage
                 .from("property-images")
-                .upload(filePath, selectedFile);
+                .upload(fileName, selectedFile, {
+                    upsert: true,
+                    contentType: selectedFile.type,
+                });
 
             if (uploadError) throw uploadError;
+
             setFilePerc(50);
 
             // 2. GET PUBLIC URL
             const { data } = supabase.storage
                 .from("property-images")
-                .getPublicUrl(filePath);
+                .getPublicUrl(fileName);
+
 
             setFilePerc(100);
-            setFormData({ ...formData, avatar: data.publicUrl });
-            alert("Image uploaded and preview updated!");
 
+            // Safe state update
+            setFormData(prev => ({
+                ...prev,
+                avatar: data.publicUrl
+            }));
 
-            // if (!file) {
-            //     alert("Please select a file to upload.")
-            //     return;
-            // }
-
-
-            // let { data, error } = await supabase.storage.from("property-images").upload(filePath, file)
-
-            // if (error) {
-            //     throw error;
-            // }
-
-            // const { data: url } = await supabase.storage.from("property-images").getPublicUrl(filePath)
-
-            // console.log(url.publicUrl);
-
-            // setFileURL(url.publicUrl)
-
-            // alert("File uploaded successfully.")
+            // setFormData({ ...formData, avatar: data.publicUrl });
 
         } catch (error) {
-            alert("Error uploading file:", error.message)
+            alert(`Error uploading file: ${error.message}`)
         } finally {
             setUploading(false)
         }
     }
 
+    const handleChange = (e) => {
+        setFormData(prev => ({
+            ...prev,
+            [e.target.id]: e.target.value
+        }));
+
+        // setFormData({ ...formData, [e.target.id]: e.target.value });
+    };
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        try {
+            dispatch(updateUserStart())
+            const res = await fetch(`/api/user/update/${currentUser._id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+
+            const data = await res.json()
+            if (data.success === false) {
+                dispatch(updateUserFailure(data.message))
+                return;
+            }
+
+            dispatch(updateUserSuccess(data))
+            setUpdateSuccess(true)
+        } catch (error) {
+            dispatch(updateUserFailure(error.message))
+        }
+    }
+
+    const handleDeleteUser = async () => {
+        try {
+            dispatch(deleteUserStart())
+            const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+                method: 'DELETE'
+            })
+
+            const data = await res.json()
+            if (data.success === false) {
+                dispatch(deleteUserFailure(data.message))
+                return;
+            }
+
+            dispatch(deleteUserSuccess(data))
+            // setUpdateSuccess(true)
+        } catch (error) {
+            dispatch(deleteUserFailure(error.message))
+        }
+    }
+
+    const handleSignOut = async () => {
+        dispatch(signOutUserStart())
+
+        try {
+            const res = await fetch('/api/auth/signout')
+            const data = await res.json()
+
+            if (data.success === false) {
+                dispatch(signOutUserFailure(data.message))
+                return;
+            }
+
+            dispatch(signOutUserSuccess(data))
+        } catch (error) {
+            dispatch(signOutUserFailure(error.message))
+        }
+    }
+
+
 
     return (
         <div className='p-3 max-w-lg mx-auto'>
             <h1 className='text-3xl font-semibold text-center my-7'>Profile</h1>
-            <form className='flex flex-col gap-4'>
+            <form className='flex flex-col gap-4' onSubmit={handleSubmit} >
                 <input
                     onChange={handleFileChange}
                     type='file'
@@ -121,12 +191,40 @@ export default function Profile() {
                     ) : null}
                 </p>
 
-                <input type='text' defaultValue={currentUser.username} id='username' className='border p-3 rounded-lg' />
-                <input type='email' defaultValue={currentUser.email} id='email' className='border p-3 rounded-lg' />
-                <button className='bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95'>
-                    Update Profile
+                <input
+                    type='text'
+                    defaultValue={currentUser.username}
+                    onChange={handleChange}
+                    id='username'
+                    className='border p-3 rounded-lg' />
+
+                <input
+                    type='email'
+                    defaultValue={currentUser.email}
+                    onChange={handleChange}
+                    id='email'
+                    className='border p-3 rounded-lg' />
+
+                <input
+                    type='password'
+                    placeholder='password'
+                    onChange={handleChange}
+                    id='password'
+                    className='border p-3 rounded-lg'
+                />
+                <button disabled={loading} className='bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95'>
+                    {loading ? 'Loading...' : 'Update'}
                 </button>
             </form>
+            <div className='flex justify-between mt-5'>
+                <span className='text-red-700 cursor-pointer' onClick={handleDeleteUser}>Delete account</span>
+                <span className='text-red-700 cursor-pointer' onClick={handleSignOut}>Sign out</span>
+            </div>
+
+            <p className='text-red-700 mt-5'>{error ? error : ''}</p>
+            <p className='text-green-700 mt-5'>
+                {updateSuccess ? 'User is updated successfully!' : ''}
+            </p>
         </div>
     );
 }

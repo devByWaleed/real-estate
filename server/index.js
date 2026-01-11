@@ -1,12 +1,12 @@
 import express from 'express';
 // import connectDB from './config/mongodb.js'
 import mongoose from "mongoose";
+import cookieParser from 'cookie-parser'
 import dotenv from "dotenv";
 dotenv.config();
 import userRouter from './routes/userRoutes.js';
 import authRouter from './routes/authRoutes.js';
 
-// import cookieParser from 'cookie-parser'
 
 
 mongoose.connect(`${process.env.MONGODB_URI}`).then(() => {
@@ -22,7 +22,7 @@ const app = express();
 
 app.use(express.json());
 
-// app.use(cookieParser())
+app.use(cookieParser())
 
 app.use('/api/user', userRouter)
 app.use('/api/auth', authRouter)
