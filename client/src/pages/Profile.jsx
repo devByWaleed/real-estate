@@ -2,6 +2,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useRef, useState } from 'react';
 import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUserStart, deleteUserSuccess, deleteUserFailure, signOutUserStart, signOutUserSuccess, signOutUserFailure } from '../redux/user/userSlice.js';
 import { supabase } from '../supabaseClient';
+import { Link } from 'react-router-dom';
 
 
 export default function Profile() {
@@ -49,7 +50,6 @@ export default function Profile() {
 
             const fileExt = selectedFile.name.split(".").pop()
             const fileName = `${currentUser._id}-${Math.random()}.${fileExt}`
-            // const filePath = `${fileName}`
 
 
             // 1. UPLOAD TO SUPABASE
@@ -101,11 +101,20 @@ export default function Profile() {
         e.preventDefault()
         try {
             dispatch(updateUserStart())
+
+            const payload = { ...formData };
+
+            // Password update handling
+            if (!payload.password || payload.password.trim() === "") {
+                delete payload.password;
+            }
+
             const res = await fetch(`/api/user/update/${currentUser._id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(formData)
             })
 
@@ -126,7 +135,8 @@ export default function Profile() {
         try {
             dispatch(deleteUserStart())
             const res = await fetch(`/api/user/delete/${currentUser._id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                credentials: 'include'
             })
 
             const data = await res.json()
@@ -215,6 +225,11 @@ export default function Profile() {
                 <button disabled={loading} className='bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95'>
                     {loading ? 'Loading...' : 'Update'}
                 </button>
+
+                <Link className='bg-green-700 text-white p-3 rounded-lg uppercase text-center hover:opacity-95' to={"/create-listing"}>
+                    Create Listing
+                </Link>
+
             </form>
             <div className='flex justify-between mt-5'>
                 <span className='text-red-700 cursor-pointer' onClick={handleDeleteUser}>Delete account</span>

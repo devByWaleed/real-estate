@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import userRouter from './routes/userRoutes.js';
 import authRouter from './routes/authRoutes.js';
+import listingRouter from './routes/listingRoutes.js'
 
 
 
@@ -26,6 +27,8 @@ app.use(cookieParser())
 
 app.use('/api/user', userRouter)
 app.use('/api/auth', authRouter)
+app.use('/api/listing', listingRouter)
+
 // connectDB()
 
 

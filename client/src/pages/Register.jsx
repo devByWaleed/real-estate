@@ -23,6 +23,7 @@ const Register = () => {
 				headers: {
 					'Content-Type': 'application/json'
 				},
+				credentials: 'include',
 				body: JSON.stringify(formData)
 			})
 
@@ -40,10 +41,6 @@ const Register = () => {
 			setError(error.message)
 		}
 	}
-
-
-
-	console.log(formData);
 
 	return (
 		<div className='p-3 max-w-lg mx-auto'>
