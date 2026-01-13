@@ -22,7 +22,7 @@ export default function CreateListing() {
         offer: false,
         parking: false,
         furnished: false,
-        imageUrls: [], // To store the links from Supabase
+        imageURLs: [], // To store the links from Supabase
         // ... other form fields
     });
     const [uploading, setUploading] = useState(false);
@@ -33,7 +33,7 @@ export default function CreateListing() {
 
     const handleImageSubmit = (e) => {
         // Check if files exist and limits (max 6 images total)
-        if (files.length > 0 && files.length + formData.imageUrls.length < 7) {
+        if (files.length > 0 && files.length + formData.imageURLs.length < 7) {
             setUploading(true);
             setImageUploadError(false);
 
@@ -50,7 +50,7 @@ export default function CreateListing() {
                     // Update form data with new URLs (keeping existing ones)
                     setFormData({
                         ...formData,
-                        imageUrls: formData.imageUrls.concat(urls)
+                        imageURLs: formData.imageURLs.concat(urls)
                     });
                     setImageUploadError(false);
                     setUploading(false);
@@ -70,7 +70,7 @@ export default function CreateListing() {
     const handleRemoveImage = (index) => {
         setFormData({
             ...formData,
-            imageUrls: formData.imageUrls.filter((_, i) => i !== index)
+            imageURLs: formData.imageURLs.filter((_, i) => i !== index)
         });
     }
 
@@ -135,7 +135,7 @@ export default function CreateListing() {
         e.preventDefault()
         try {
 
-            if (formData.imageUrls.length < 1) return setError('You must upload at least 1 image')
+            if (formData.imageURLs.length < 1) return setError('You must upload at least 1 image')
 
             if (+formData.regularPrice < +formData.discountPrice) return setError('Discount price must be lower than regular price')
 
@@ -148,6 +148,7 @@ export default function CreateListing() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     ...formData,
                     userRef: currentUser._id
@@ -331,8 +332,8 @@ export default function CreateListing() {
                     <p className='text-red-700 text-sm'>
                         {imageUploadError && imageUploadError}
                     </p>
-                    {formData.imageUrls.length > 0 &&
-                        formData.imageUrls.map((url, index) => (
+                    {formData.imageURLs.length > 0 &&
+                        formData.imageURLs.map((url, index) => (
                             <div
                                 key={url}
                                 className='flex justify-between p-3 border items-center'
