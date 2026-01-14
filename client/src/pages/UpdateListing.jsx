@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { supabase } from '../supabaseClient';
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect } from "react";
 
-export default function CreateListing() {
+export default function UpdateListing() {
 
     const { currentUser } = useSelector(state => state.user)
     const navigate = useNavigate()
+    const params = useParams()
+
     const [files, setFiles] = useState([])
 
     // 
@@ -29,6 +32,27 @@ export default function CreateListing() {
     const [imageUploadError, setImageUploadError] = useState(false);
     const [error, setError] = useState(false)
     const [loading, setLoading] = useState(false)
+
+
+    useEffect(() => {
+        const fetchListing = async () => {
+            const listingID = params.listingID;
+            
+            const res = await fetch(`/api/listing/get/${listingID}`)
+
+            const data = await res.json()
+            
+            if (data.success === false) {
+                console.log(data.message);
+                return;
+            }
+
+            setFormData(data)
+            
+        }
+
+        fetchListing()
+    }, [])
 
 
     const handleImageSubmit = (e) => {
@@ -143,7 +167,7 @@ export default function CreateListing() {
 
             setLoading(true)
             setError(false)
-            const res = await fetch('/api/listing/create', {
+            const res = await fetch(`/api/listing/update/${params.listingID}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -170,12 +194,10 @@ export default function CreateListing() {
 
 
 
-    console.log(formData);
-
     return (
         <main className='p-3 max-w-4xl mx-auto'>
             <h1 className='text-3xl font-semibold text-center my-7'>
-                Create a Listing
+                Update a Listing
             </h1>
             <form onSubmit={handleSubmit} className='flex flex-col sm:flex-row gap-4'>
                 <div className='flex flex-col gap-4 flex-1'>
@@ -354,7 +376,7 @@ export default function CreateListing() {
                         ))}
 
 
-                    <button disabled={loading || uploading} className='p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>{loading ? 'Creating...' : 'Create Listing'}</button>
+                    <button disabled={loading || uploading} className='p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>{loading ? 'Updating...' : 'Update Listing'}</button>
                     {error && <p className="text-red-700 text-sm">{error}</p>}
                 </div>
             </form>
