@@ -22,6 +22,8 @@ const App = () => {
         <Route path='/about' element={<About />} />
         <Route path='/search' element={<Search />} />
         <Route path='/listing/:listingID' element={<Listing />} />
+        
+        {/* Private Route for authenticated persons */}
         <Route element={<PrivateRoute />}>
           <Route path='/profile' element={<Profile />} />
           <Route path='/create-listing' element={<CreateListing />} />
