@@ -34,7 +34,11 @@ jobs:
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
-          docker build -f client/Dockerfile -t $REGISTRY/real-estate-client:latest ./client
+          docker build \
+            --build-arg VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }} \
+            --build-arg VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }} \
+            --build-arg VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }} \
+            -f client/Dockerfile -t $REGISTRY/real-estate-client:latest ./client
           docker push $REGISTRY/real-estate-client:latest
 
       - name: Deploy to EC2
